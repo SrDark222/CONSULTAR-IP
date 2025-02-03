@@ -1,0 +1,134 @@
+import javafx.application.Application;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.stage.Stage;
+import javafx.animation.FadeTransition;
+import javafx.animation.ScaleTransition;
+import javafx.util.Duration;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.Scanner;
+import org.json.JSONObject;
+
+public class IPConsultorDark extends Application {
+
+    private Label resultLabel = new Label("Digite um IP e clique em Consultar");
+    private ImageView loadingGif;
+
+    @Override
+    public void start(Stage primaryStage) {
+        primaryStage.setTitle("Dark Web IP Lookup");
+
+        // Fundo Animado (GIF estilo GTA RP/FiveM)
+        ImageView background = new ImageView(new Image("file:background.gif"));
+        background.setFitWidth(800);
+        background.setFitHeight(600);
+
+        // Ícone de Caveira
+        ImageView skullIcon = new ImageView(new Image("file:skull.png"));
+        skullIcon.setFitWidth(80);
+        skullIcon.setFitHeight(80);
+
+        // Campo de Entrada
+        TextField ipField = new TextField();
+        ipField.setPromptText("Digite o IP...");
+        ipField.setStyle("-fx-background-color: black; -fx-text-fill: red; -fx-font-size: 16px;");
+
+        // Botão Consultar
+        Button consultarBtn = new Button("CONSULTAR");
+        consultarBtn.setStyle("-fx-background-color: red; -fx-text-fill: white; -fx-font-size: 18px; -fx-font-weight: bold;");
+        consultarBtn.setOnMouseEntered(e -> consultarBtn.setStyle("-fx-background-color: darkred; -fx-text-fill: white;"));
+        consultarBtn.setOnMouseExited(e -> consultarBtn.setStyle("-fx-background-color: red; -fx-text-fill: white;"));
+
+        // Loading GIF (Invisível no início)
+        loadingGif = new ImageView(new Image("file:loading.gif"));
+        loadingGif.setFitWidth(100);
+        loadingGif.setFitHeight(100);
+        loadingGif.setVisible(false);
+
+        // Resultado da Consulta
+        resultLabel.setFont(new Font("Monospace", 16));
+        resultLabel.setTextFill(Color.LIMEGREEN);
+        resultLabel.setWrapText(true);
+        resultLabel.setStyle("-fx-background-color: black; -fx-padding: 10px; -fx-border-color: red; -fx-border-width: 2px;");
+
+        // Ação do Botão
+        consultarBtn.setOnAction(e -> consultarIP(ipField.getText()));
+
+        // Layout
+        VBox layout = new VBox(10, skullIcon, ipField, consultarBtn, loadingGif, resultLabel);
+        layout.setAlignment(Pos.CENTER);
+        layout.setStyle("-fx-background-color: black; -fx-padding: 20px;");
+        
+        StackPane root = new StackPane(background, layout);
+        Scene scene = new Scene(root, 800, 600);
+
+        primaryStage.setScene(scene);
+        primaryStage.show();
+    }
+
+    private void consultarIP(String ip) {
+        if (ip.isEmpty()) {
+            resultLabel.setText("⚠️ Digite um IP válido!");
+            return;
+        }
+
+        // Mostra Loading
+        loadingGif.setVisible(true);
+        resultLabel.setText("🔍 Consultando IP...");
+
+        new Thread(() -> {
+            try {
+                String apiUrl = "http://ip-api.com/json/" + ip;
+                HttpURLConnection connection = (HttpURLConnection) new URL(apiUrl).openConnection();
+                connection.setRequestMethod("GET");
+
+                Scanner scanner = new Scanner(connection.getInputStream());
+                String response = scanner.useDelimiter("\\A").next();
+                scanner.close();
+
+                JSONObject json = new JSONObject(response);
+
+                String pais = json.getString("country");
+                String cidade = json.getString("city");
+                String isp = json.getString("isp");
+                String latitude = json.get("lat").toString();
+                String longitude = json.get("lon").toString();
+
+                String resultado = String.format(
+                        "🌍 País: %s\n🏙️ Cidade: %s\n📡 Provedor: %s\n📍 Latitude: %s\n📍 Longitude: %s",
+                        pais, cidade, isp, latitude, longitude
+                );
+
+                // Atualiza na Thread Principal
+                javafx.application.Platform.runLater(() -> {
+                    loadingGif.setVisible(false);
+                    resultLabel.setText(resultado);
+
+                    // Efeito de Aparição no Resultado
+                    FadeTransition fadeIn = new FadeTransition(Duration.millis(1000), resultLabel);
+                    fadeIn.setFromValue(0);
+                    fadeIn.setToValue(1);
+                    fadeIn.play();
+                });
+
+            } catch (IOException ex) {
+                javafx.application.Platform.runLater(() -> {
+                    loadingGif.setVisible(false);
+                    resultLabel.setText("❌ Erro ao consultar o IP!");
+                });
+            }
+        }).start();
+    }
+
+    public static void main(String[] args) {
+        launch(args);
+    }
+}

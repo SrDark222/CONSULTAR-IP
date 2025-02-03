@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consulta de IP - Hacker Neon</title>
+    <style>
+        /* Estilização geral */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Courier New', monospace;
+        }
+
+        body {
+            background: black;
+            color: lime;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        /* Fundo animado */
+        .background {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            filter: blur(5px);
+        }
+
+        /* Container principal */
+        .container {
+            position: relative;
+            margin-top: 50px;
+            padding: 20px;
+            width: 80%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 20px lime;
+            border-radius: 10px;
+        }
+
+        h1 {
+            text-shadow: 0 0 10px lime;
+        }
+
+        /* Botão neon */
+        button {
+            background-color: transparent;
+            color: lime;
+            border: 2px solid lime;
+            padding: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 0 10px lime;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background-color: lime;
+            color: black;
+        }
+
+        /* Loading */
+        #loading {
+            display: none;
+            font-size: 18px;
+            color: red;
+            text-shadow: 0 0 10px red;
+        }
+
+        /* Resultados */
+        .result {
+            margin-top: 20px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- GIF de fundo -->
+    <img src="background.gif" class="background">
+
+    <div class="container">
+        <h1>🔍 CONSULTA DE IP</h1>
+        <button onclick="consultarIP()">CONSULTAR</button>
+        <p id="loading">🔄 Carregando...</p>
+        <div id="resultado" class="result"></div>
+    </div>
+
+    <script>
+        async function consultarIP() {
+            document.getElementById("loading").style.display = "block";
+            document.getElementById("resultado").innerHTML = "";
+
+            try {
+                let response = await fetch("http://ip-api.com/json/");
+                let data = await response.json();
+
+                document.getElementById("resultado").innerHTML = `
+                    <p><strong>IP:</strong> ${data.query}</p>
+                    <p><strong>País:</strong> ${data.country}</p>
+                    <p><strong>Estado:</strong> ${data.regionName}</p>
+                    <p><strong>Cidade:</strong> ${data.city}</p>
+                    <p><strong>Provedor:</strong> ${data.isp}</p>
+                    <p><strong>Organização:</strong> ${data.org}</p>
+                    <p><strong>Proxy:</strong> ${data.proxy ? "Sim" : "Não"}</p>
+                    <p><strong>Fuso Horário:</strong> ${data.timezone}</p>
+                    <p><strong>Latitude:</strong> ${data.lat}</p>
+                    <p><strong>Longitude:</strong> ${data.lon}</p>
+                `;
+            } catch (error) {
+                document.getElementById("resultado").innerHTML = "Erro ao buscar informações!";
+            }
+
+            document.getElementById("loading").style.display = "none";
+        }
+    </script>
+
+</body>
+</html>
